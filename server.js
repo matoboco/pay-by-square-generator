@@ -34,14 +34,22 @@ app.post('/pay-by-square-generator/generate-qr', async (req, res) => {
     const {
       amount,
       iban,
+      bankAccounts,
       withFrame = true,
       qrSize = 300
     } = req.body;
 
     // Validate required fields
-    if (!amount || !iban) {
+    if (!amount) {
       return res.status(400).json({
-        error: 'Missing required fields: amount and iban are mandatory'
+        error: 'Missing required field: amount is mandatory'
+      });
+    }
+
+    // Check if either iban or bankAccounts is provided
+    if (!iban && (!bankAccounts || bankAccounts.length === 0)) {
+      return res.status(400).json({
+        error: 'Missing required field: either iban or bankAccounts array must be provided'
       });
     }
 
@@ -70,11 +78,18 @@ app.post('/pay-by-square-generator/generate-qr', async (req, res) => {
  */
 app.post('/pay-by-square-generator/generate-code', async (req, res) => {
   try {
-    const { amount, iban } = req.body;
+    const { amount, iban, bankAccounts } = req.body;
 
-    if (!amount || !iban) {
+    if (!amount) {
       return res.status(400).json({
-        error: 'Missing required fields: amount and iban are mandatory'
+        error: 'Missing required field: amount is mandatory'
+      });
+    }
+
+    // Check if either iban or bankAccounts is provided
+    if (!iban && (!bankAccounts || bankAccounts.length === 0)) {
+      return res.status(400).json({
+        error: 'Missing required field: either iban or bankAccounts array must be provided'
       });
     }
 
