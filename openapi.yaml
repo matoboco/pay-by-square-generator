@@ -15,8 +15,8 @@ info:
 servers:
   - url: http://localhost:3000
     description: Development server
-  - url: https://api.example.com
-    description: Production server
+  - url: https://wusonline.astondev.sk
+    description: Wusweb - Astondev
 
 tags:
   - name: QR Generation
