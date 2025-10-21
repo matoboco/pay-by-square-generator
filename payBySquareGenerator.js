@@ -149,7 +149,7 @@ async function addPayBySquareFrame(qrBuffer, framePath = './frame.png') {
         // Assuming the frame has some padding/border, adjust these values if needed
         const qrSize = Math.min(frameImage.width, frameImage.height) * 0.85; // 85% of frame size
         const qrX = (frameImage.width - qrSize) / 2;
-        const qrY = (frameImage.height - qrSize) / 2 - 30; // Shifted 30px higher
+        const qrY = (frameImage.height - qrSize) / 2 - 25; // Shifted 30px higher
 
         // Draw QR code in center
         ctx.drawImage(qrImage, qrX, qrY, qrSize, qrSize);
