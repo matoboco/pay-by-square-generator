@@ -2,13 +2,30 @@
 const express = require('express');
 const { version } = require('./package.json');
 const { generatePayBySquareCode, generatePayBySquareQR } = require('./payBySquareGenerator');
+const swaggerUi = require('swagger-ui-express');
+const YAML = require('yamljs');
+const path = require('path');
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Load OpenAPI specification
+const openApiDocument = YAML.load(path.join(__dirname, 'openapi.yaml'));
+
+// Swagger UI
+app.use('/pay-by-square-generator/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'PayBySquare API Documentation'
+}));
+
+// Redirect root to documentation
+app.get('/', (req, res) => {
+  res.redirect('/pay-by-square-generator/docs');
+});
+
 /**
- * POST /pay-by-square/generate-qr
+ * POST /pay-by-square-generator/generate-qr
  * Generate QR code from payment parameters
  * Returns PNG image as binary data
  */
@@ -48,7 +65,7 @@ app.post('/pay-by-square-generator/generate-qr', async (req, res) => {
 });
 
 /**
- * POST /pay-by-square/generate-code
+ * POST /pay-by-square-generator/generate-code
  * Generate only PayBySquare code (text) without QR image
  */
 app.post('/pay-by-square-generator/generate-code', async (req, res) => {
@@ -75,7 +92,7 @@ app.post('/pay-by-square-generator/generate-code', async (req, res) => {
 });
 
 /**
- * GET /pay-by-square/version.txt
+ * GET /pay-by-square-generator/version.txt
  * Returns version number from package.json
  */
 app.get('/pay-by-square-generator/version.txt', (req, res) => {
@@ -86,4 +103,5 @@ app.get('/pay-by-square-generator/version.txt', (req, res) => {
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`PayBySquare API running on port ${PORT}`);
+  console.log(`Documentation available at http://localhost:${PORT}/pay-by-square-generator/docs`);
 });

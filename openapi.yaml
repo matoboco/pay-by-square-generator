@@ -1,0 +1,466 @@
+openapi: 3.0.3
+info:
+  title: PayBySquare API
+  description: |
+    REST API pre generovanie PayBySquare QR kódov podľa slovenského štandardu verzie 1.1.0.
+    
+    PayBySquare je národný štandard pre QR platby schválený Slovenskou bankovou asociáciou.
+    API podporuje generovanie jednoduchých platieb, trvalých príkazov a inkasných platieb.
+  version: 1.0.0
+  contact:
+    name: PayBySquare API Support
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:3000
+    description: Development server
+  - url: https://api.example.com
+    description: Production server
+
+tags:
+  - name: QR Generation
+    description: Generovanie QR kódov s platobnými údajmi
+  - name: Code Generation
+    description: Generovanie textových PayBySquare kódov
+  - name: System
+    description: Systémové endpointy
+
+paths:
+  /pay-by-square-generator/generate-qr:
+    post:
+      tags:
+        - QR Generation
+      summary: Vygeneruje PayBySquare QR kód
+      description: |
+        Vygeneruje QR kód s platobnými údajmi a vráti ho ako PNG obrázok.
+        Podporuje základné platby, trvalé príkazy a inkasné platby.
+      operationId: generateQR
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+            examples:
+              simple:
+                summary: Jednoduchá platba
+                value:
+                  amount: 100.50
+                  iban: SK7700000000000000000000
+                  swift: FIOZSKBAXXX
+                  beneficiaryName: Firma s.r.o.
+                  variableSymbol: "123456"
+                  note: Platba za faktúru
+              multiple-accounts:
+                summary: Viacero bankových účtov
+                value:
+                  amount: 250.00
+                  bankAccounts:
+                    - iban: SK7700000000000000000000
+                      swift: FIOZSKBAXXX
+                    - iban: SK8811000000001234567890
+                      swift: TATRSKBXXXX
+                  beneficiaryName: Obchod XYZ
+                  invoiceId: INV-2025-001
+              standing-order:
+                summary: Trvalý príkaz
+                value:
+                  amount: 50.00
+                  iban: SK7700000000000000000000
+                  paymentOptions:
+                    - paymentorder
+                    - standingorder
+                  standingOrder:
+                    day: 15
+                    month: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+                    periodicity: m
+                    lastDate: "2026-12-31"
+              direct-debit:
+                summary: SEPA inkaso
+                value:
+                  amount: 100.00
+                  iban: SK7700000000000000000000
+                  paymentOptions:
+                    - paymentorder
+                    - directdebit
+                  directDebit:
+                    scheme: sepa
+                    type: recurrent
+                    mandateId: MANDATE-123
+                    creditorId: SK12ZZZ00000000123
+                    maxAmount: 150.00
+                    validTillDate: "2026-12-31"
+      responses:
+        '200':
+          description: QR kód úspešne vygenerovaný
+          content:
+            image/png:
+              schema:
+                type: string
+                format: binary
+        '400':
+          description: Chybné vstupné dáta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error: Missing required fields
+                message: amount and iban are mandatory
+        '500':
+          description: Chyba pri generovaní QR kódu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /pay-by-square-generator/generate-code:
+    post:
+      tags:
+        - Code Generation
+      summary: Vygeneruje PayBySquare kód (text)
+      description: |
+        Vygeneruje len PayBySquare kód ako textový reťazec bez vytvorenia QR obrázka.
+        Kód môže byť použitý pre NFC alebo vlastné spracovanie.
+      operationId: generateCode
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PaymentRequest'
+      responses:
+        '200':
+          description: PayBySquare kód úspešne vygenerovaný
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: string
+                    description: PayBySquare kód (Base32hex zakódovaný)
+                    example: "0004G00006F071MBI3LRVO4PS..."
+        '400':
+          description: Chybné vstupné dáta
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '500':
+          description: Chyba pri generovaní kódu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /pay-by-square-generator/version.txt:
+    get:
+      tags:
+        - System
+      summary: Získa verziu API
+      description: Vráti číslo verzie aplikácie z package.json
+      operationId: getVersion
+      responses:
+        '200':
+          description: Verzia API
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: "1.0.0"
+
+components:
+  schemas:
+    PaymentRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        # Základné platobné údaje
+        amount:
+          type: number
+          format: double
+          description: Suma platby
+          example: 100.50
+          minimum: 0.01
+
+        currency:
+          type: string
+          description: Mena platby (ISO 4217)
+          default: EUR
+          example: EUR
+          pattern: '^[A-Z]{3}$'
+
+        iban:
+          type: string
+          description: IBAN príjemcu (povinné ak nie je zadané bankAccounts)
+          example: SK7700000000000000000000
+          pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]+$'
+          maxLength: 34
+
+        swift:
+          type: string
+          description: SWIFT/BIC kód banky
+          example: FIOZSKBAXXX
+          pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$'
+          maxLength: 11
+
+        # Identifikácia
+        invoiceId:
+          type: string
+          description: Identifikátor faktúry
+          example: INV-2025-001
+          maxLength: 10
+
+        # Dátumy
+        date:
+          type: string
+          format: date
+          description: Dátum vytvorenia platby (YYYY-MM-DD)
+          example: "2025-10-21"
+
+        paymentDueDate:
+          type: string
+          format: date
+          description: Dátum splatnosti platby (YYYY-MM-DD)
+          example: "2025-11-21"
+
+        # Platobné symboly
+        variableSymbol:
+          type: string
+          description: Variabilný symbol
+          example: "123456"
+          maxLength: 10
+          pattern: '^[0-9]*$'
+
+        constantSymbol:
+          type: string
+          description: Konštantný symbol
+          example: "0308"
+          maxLength: 4
+          pattern: '^[0-9]*$'
+
+        specificSymbol:
+          type: string
+          description: Špecifický symbol
+          example: "789"
+          maxLength: 10
+          pattern: '^[0-9]*$'
+
+        originatorsReferenceInformation:
+          type: string
+          description: SEPA referencia (alternatíva k VS/KS/SS)
+          example: RF18539007547034
+          maxLength: 35
+
+        note:
+          type: string
+          description: Správa pre príjemcu
+          example: Platba za faktúru INV-2025-001
+          maxLength: 140
+
+        # Údaje o príjemcovi
+        beneficiaryName:
+          type: string
+          description: Meno/názov príjemcu
+          example: Firma s.r.o.
+          maxLength: 70
+
+        beneficiaryAddress1:
+          type: string
+          description: Adresa príjemcu - riadok 1
+          example: Hlavná 123
+          maxLength: 70
+
+        beneficiaryAddress2:
+          type: string
+          description: Adresa príjemcu - riadok 2
+          example: 811 01 Bratislava
+          maxLength: 70
+
+        # Typy platby
+        paymentOptions:
+          type: array
+          description: Typy podporovaných platieb
+          items:
+            type: string
+            enum:
+              - paymentorder
+              - standingorder
+              - directdebit
+          default:
+            - paymentorder
+          example:
+            - paymentorder
+
+        # Viacero bankových účtov
+        bankAccounts:
+          type: array
+          description: Zoznam bankových účtov príjemcu (prvý je predvolený, max 6)
+          maxItems: 6
+          items:
+            $ref: '#/components/schemas/BankAccount'
+
+        # Trvalý príkaz
+        standingOrder:
+          $ref: '#/components/schemas/StandingOrder'
+
+        # Inkaso
+        directDebit:
+          $ref: '#/components/schemas/DirectDebit'
+
+        # QR nastavenia
+        withFrame:
+          type: boolean
+          description: Pridať PAY by square rámček
+          default: true
+
+        qrSize:
+          type: integer
+          description: Veľkosť QR kódu v pixeloch (pred vložením do rámčeka)
+          default: 300
+          minimum: 100
+          maximum: 1000
+
+    BankAccount:
+      type: object
+      required:
+        - iban
+      properties:
+        iban:
+          type: string
+          description: IBAN účtu
+          example: SK7700000000000000000000
+          pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]+$'
+          maxLength: 34
+        swift:
+          type: string
+          description: SWIFT/BIC kód
+          example: FIOZSKBAXXX
+          pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$'
+          maxLength: 11
+
+    StandingOrder:
+      type: object
+      description: Nastavenia pre trvalý príkaz
+      properties:
+        day:
+          type: integer
+          description: Deň platby (1-31 pre deň v mesiaci, 1-7 pre deň v týždni)
+          minimum: 1
+          maximum: 31
+          example: 15
+
+        month:
+          type: array
+          description: Mesiace v ktorých sa má platiť (1=január, 12=december)
+          items:
+            type: integer
+            minimum: 1
+            maximum: 12
+          example: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]
+
+        periodicity:
+          type: string
+          description: Periodicita platby
+          enum:
+            - d  # daily
+            - w  # weekly
+            - b  # biweekly
+            - m  # monthly
+            - B  # bimonthly
+            - q  # quarterly
+            - s  # semiannually
+            - a  # annually
+          example: m
+
+        lastDate:
+          type: string
+          format: date
+          description: Dátum poslednej platby (YYYY-MM-DD)
+          example: "2026-12-31"
+
+    DirectDebit:
+      type: object
+      description: Nastavenia pre inkaso
+      properties:
+        scheme:
+          type: string
+          description: Schéma inkasa
+          enum:
+            - sepa
+            - other
+          default: other
+          example: sepa
+
+        type:
+          type: string
+          description: Typ inkasa
+          enum:
+            - oneoff
+            - one-off
+            - recurrent
+          example: recurrent
+
+        variableSymbol:
+          type: string
+          description: Variabilný symbol pre inkaso
+          maxLength: 10
+          pattern: '^[0-9]*$'
+
+        specificSymbol:
+          type: string
+          description: Špecifický symbol pre inkaso
+          maxLength: 10
+          pattern: '^[0-9]*$'
+
+        originatorsReferenceInformation:
+          type: string
+          description: SEPA referencia pre inkaso
+          maxLength: 35
+
+        mandateId:
+          type: string
+          description: ID mandátu (SEPA)
+          example: MANDATE-123
+          maxLength: 35
+
+        creditorId:
+          type: string
+          description: ID veriteľa (SEPA)
+          example: SK12ZZZ00000000123
+          maxLength: 35
+
+        contractId:
+          type: string
+          description: ID zmluvy (SEPA)
+          maxLength: 35
+
+        maxAmount:
+          type: number
+          format: double
+          description: Maximálna suma inkasa
+          example: 150.00
+          minimum: 0.01
+
+        validTillDate:
+          type: string
+          format: date
+          description: Dátum platnosti inkasa (YYYY-MM-DD)
+          example: "2026-12-31"
+
+    Error:
+      type: object
+      required:
+        - error
+      properties:
+        error:
+          type: string
+          description: Typ chyby
+          example: Missing required fields
+        message:
+          type: string
+          description: Detailný popis chyby
+          example: amount and iban are mandatory

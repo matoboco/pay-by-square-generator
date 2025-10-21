@@ -16,6 +16,7 @@ RUN npm install --only=production
 
 COPY server.js ./
 COPY payBySquareGenerator.js ./
+COPY openapi.yaml ./
 COPY frame.png ./
 
 EXPOSE 3000
