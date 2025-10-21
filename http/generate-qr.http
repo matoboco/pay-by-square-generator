@@ -1,4 +1,4 @@
-POST http://localhost:3000/pay-by-square/generate-qr
+POST http://localhost:3000/pay-by-square-generator/generate-qr
 Content-Type: application/json
 
 {
@@ -19,4 +19,4 @@ Content-Type: application/json
 >> qr-code.png
 
 ###
-GET http://localhost:3000/pay-by-square/version.txt
+GET http://localhost:3000/pay-by-square-generator/version.txt

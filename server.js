@@ -12,7 +12,7 @@ app.use(express.urlencoded({ extended: true }));
  * Generate QR code from payment parameters
  * Returns PNG image as binary data
  */
-app.post('/pay-by-square/generate-qr', async (req, res) => {
+app.post('/pay-by-square-generator/generate-qr', async (req, res) => {
   try {
     const {
       amount,
@@ -51,7 +51,7 @@ app.post('/pay-by-square/generate-qr', async (req, res) => {
  * POST /pay-by-square/generate-code
  * Generate only PayBySquare code (text) without QR image
  */
-app.post('/pay-by-square/generate-code', async (req, res) => {
+app.post('/pay-by-square-generator/generate-code', async (req, res) => {
   try {
     const { amount, iban } = req.body;
 
@@ -78,7 +78,7 @@ app.post('/pay-by-square/generate-code', async (req, res) => {
  * GET /pay-by-square/version.txt
  * Returns version number from package.json
  */
-app.get('/pay-by-square/version.txt', (req, res) => {
+app.get('/pay-by-square-generator/version.txt', (req, res) => {
   res.set('Content-Type', 'text/plain');
   res.send(version);
 });
