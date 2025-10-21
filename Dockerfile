@@ -1,9 +1,18 @@
 FROM node:18-alpine
 
+# Install native dependencies for canvas
+RUN apk add --no-cache \
+    build-base \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    pixman-dev
+
 WORKDIR /app
 
 COPY package*.json ./
-##RUN npm ci --only=production
+RUN npm install --only=production
 
 COPY server.js ./
 COPY payBySquareGenerator.js ./
