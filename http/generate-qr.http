@@ -1,4 +1,4 @@
-POST http://localhost:3000/pay-by-square-generator/generate-qr
+POST {{url}}/pay-by-square-generator/generate-qr
 Content-Type: application/json
 
 {
@@ -16,7 +16,23 @@ Content-Type: application/json
   "date": "2025-10-21"
 }
 
->> qr-code.png
+>> out/qr-code.png
+
+###
+POST {{url}}/pay-by-square-generator/generate-qr
+Content-Type: application/json
+
+{
+  "amount": 20.00,
+  "iban": "SK7311000000002610305468",
+  "currency": "EUR",
+  "variableSymbol": "123456",
+  "note": "Platba za fakturu",
+  "beneficiaryName": "Tester Testovič",
+  "date": "2025-10-21"
+}
+
+>> out/qr-code.png
 
 ###
 GET http://localhost:3000/pay-by-square-generator/version.txt
