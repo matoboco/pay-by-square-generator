@@ -157,12 +157,23 @@ Vytvor `Dockerfile`:
 ```dockerfile
 FROM node:18-alpine
 
+# Install native dependencies for canvas
+RUN apk add --no-cache \
+    build-base \
+    cairo-dev \
+    jpeg-dev \
+    pango-dev \
+    giflib-dev \
+    pixman-dev
+
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci --only=production
 
 COPY server.js ./
+COPY payBySquareGenerator.js ./
+COPY frame.png ./
 
 EXPOSE 3000
 
@@ -174,6 +185,8 @@ Build a spustenie:
 docker build -t paybysquare-api .
 docker run -p 3000:3000 paybysquare-api
 ```
+
+**Poznámka:** Alpine image je menší, ale vyžaduje nativné balíčky. Ak chceš ešte menší image, môžeš použiť multi-stage build.
 
 ### Render / Railway / Heroku
 
