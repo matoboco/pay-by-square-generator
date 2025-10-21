@@ -14,7 +14,7 @@ build-job:
       version=$(sed 's/["]//g' version.txt)
       echo "package version $version"
 
-      docker build -t repo.astondev.sk/aston/pay-by-square-generator:$version .
-      docker push repo.astondev.sk/aston/pay-by-square-generator:$version
+      docker build -t repo.astondev.sk/pay-by-square-generator:$version .
+      docker push repo.astondev.sk/pay-by-square-generator:$version
   tags:
     - build53
