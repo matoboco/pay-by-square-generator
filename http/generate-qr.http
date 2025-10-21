@@ -1,0 +1,22 @@
+POST http://localhost:3000/pay-by-square/generate-qr
+Content-Type: application/json
+
+{
+  "amount": 20.00,
+  "iban": "SK7311000000002610305468",
+  "swift": "FIOZSKBAXXX",
+  "currency": "EUR",
+  "variableSymbol": "123456",
+  "constantSymbol": "0308",
+  "specificSymbol": "789",
+  "note": "Platba za fakturu",
+  "beneficiaryName": "Tester Testovič",
+  "beneficiaryAddress1": "Hlavna 1",
+  "beneficiaryAddress2": "Bratislava",
+  "date": "2025-10-21"
+}
+
+>> qr-code.png
+
+###
+GET http://localhost:3000/pay-by-square/version.txt

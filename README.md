@@ -1,93 +1,259 @@
-# Pay By Square Generator
+# PayBySquare API
 
+Express aplikácia pre generovanie PayBySquare QR kódov podľa slovenského štandardu.
 
-
-## Getting started
-
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
-
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
+## Štruktúra projektu
 
 ```
-cd existing_repo
-git remote add origin https://git.aston.sk/aston-frameworks/pay-by-square-generator.git
-git branch -M main
-git push -uf origin main
+.
+├── server.js                 # Express server a endpointy
+├── payBySquareGenerator.js   # Logika pre generovanie kódov a QR kódov
+├── package.json              # Závislosti a konfigurácia
+├── frame.png                 # Šablóna pre PAY by square rámček
+└── README.md                 # Dokumentácia
 ```
 
-## Integrate with your tools
+## Inštalácia
 
-- [ ] [Set up project integrations](https://git.aston.sk/aston-frameworks/pay-by-square-generator/-/settings/integrations)
+```bash
+npm install
+```
 
-## Collaborate with your team
+**Dôležité:** Umiestni súbor `frame.png` do kořenového adresára projektu (vedľa `server.js`). Tento súbor sa použije ako šablóna pre PAY by square rámček okolo QR kódu.
 
-- [ ] [Invite team members and collaborators](https://docs.gitlab.com/ee/user/project/members/)
-- [ ] [Create a new merge request](https://docs.gitlab.com/ee/user/project/merge_requests/creating_merge_requests.html)
-- [ ] [Automatically close issues from merge requests](https://docs.gitlab.com/ee/user/project/issues/managing_issues.html#closing-issues-automatically)
-- [ ] [Enable merge request approvals](https://docs.gitlab.com/ee/user/project/merge_requests/approvals/)
-- [ ] [Set auto-merge](https://docs.gitlab.com/ee/user/project/merge_requests/merge_when_pipeline_succeeds.html)
+## Nativné závislosti
 
-## Test and Deploy
+Knižnica `canvas` vyžaduje nativné závislosti:
 
-Use the built-in continuous integration in GitLab.
+**Ubuntu/Debian:**
+```bash
+sudo apt-get install build-essential libcairo2-dev libpango1.0-dev libjpeg-dev libgif-dev librsvg2-dev
+```
 
-- [ ] [Get started with GitLab CI/CD](https://docs.gitlab.com/ee/ci/quick_start/index.html)
-- [ ] [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/ee/user/application_security/sast/)
-- [ ] [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/ee/topics/autodevops/requirements.html)
-- [ ] [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/ee/user/clusters/agent/)
-- [ ] [Set up protected environments](https://docs.gitlab.com/ee/ci/environments/protected_environments.html)
+**MacOS:**
+```bash
+brew install pkg-config cairo pango libpng jpeg giflib librsvg
+```
 
-***
+## Spustenie
 
-# Editing this README
+```bash
+npm start
+```
 
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
+Pre development s auto-reloadom:
+```bash
+npm run dev
+```
 
-## Suggestions for a good README
+Server beží na porte 3000 (alebo PORT z environment premennej).
 
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
+## API Endpointy
 
-## Name
-Choose a self-explaining name for your project.
+### POST /pay-by-square/generate-qr
 
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
+Vygeneruje QR kód a vráti ho ako PNG obrázok (binárne dáta).
 
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
+**Request body (JSON):**
+```json
+{
+  "amount": 123.45,
+  "iban": "SK7700000000000000000000",
+  "swift": "FIOZSKBAXXX",
+  "beneficiaryName": "Meno Prijemcu",
+  "currency": "EUR",
+  "variableSymbol": "123456",
+  "constantSymbol": "0308",
+  "specificSymbol": "789",
+  "note": "Platba za fakturu",
+  "beneficiaryAddress1": "Hlavna 1",
+  "beneficiaryAddress2": "Bratislava",
+  "date": "2025-10-21",
+  "withFrame": true,
+  "qrSize": 300
+}
+```
 
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
+**Povinné polia:**
+- `amount` - suma platby (číslo)
+- `iban` - IBAN účtu príjemcu
 
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
+**Voliteľné polia:**
+- `swift` - SWIFT kód banky (default: '')
+- `currency` - mena (default: 'EUR')
+- `date` - dátum platby vo formáte YYYY-MM-DD (default: dnes)
+- `beneficiaryName` - meno príjemcu
+- `variableSymbol` - variabilný symbol
+- `constantSymbol` - konštantný symbol
+- `specificSymbol` - špecifický symbol
+- `note` - správa pre príjemcu
+- `beneficiaryAddress1` - adresa príjemcu riadok 1
+- `beneficiaryAddress2` - adresa príjemcu riadok 2
+- `withFrame` - pridať "PAY by square" rámček z frame.png (default: true)
+- `qrSize` - veľkosť QR kódu v px pred vložením do rámčeka (default: 300)
 
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
+**Response:**
+- Content-Type: `image/png`
+- Body: binárne dáta PNG obrázka
 
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
+**Príklad curl:**
+```bash
+# S rámčekom (default)
+curl -X POST http://localhost:3000/pay-by-square/generate-qr \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 50.00,
+    "iban": "SK7700000000000000000000",
+    "swift": "FIOZSKBAXXX",
+    "beneficiaryName": "Test User",
+    "variableSymbol": "12345"
+  }' \
+  --output qr-code.png
 
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
+# Bez rámčeka
+curl -X POST http://localhost:3000/pay-by-square/generate-qr \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": 50.00,
+    "iban": "SK7700000000000000000000",
+    "withFrame": false
+  }' \
+  --output qr-code-no-frame.png
+```
 
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
+### POST /pay-by-square/generate-code
 
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
+Vygeneruje len PayBySquare kód (text) bez QR obrázka.
 
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
+**Request:** Rovnaký ako `/pay-by-square/generate-qr`
 
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
+**Response:**
+```json
+{
+  "code": "0004G00006F071MBI3LRVO4PS..."
+}
+```
 
-## License
-For open source projects, say how it is licensed.
+### GET /pay-by-square/version.txt
 
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+Vráti číslo verzie aplikácie z `package.json`.
+
+**Response:**
+- Content-Type: `text/plain`
+- Body: číslo verzie (napr. `1.0.0`)
+
+**Príklad curl:**
+```bash
+curl http://localhost:3000/pay-by-square/version.txt
+# Output: 1.0.0
+```
+
+## Deployment
+
+### Docker
+
+Vytvor `Dockerfile`:
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+COPY package*.json ./
+RUN npm ci --only=production
+
+COPY server.js ./
+
+EXPOSE 3000
+
+CMD ["node", "server.js"]
+```
+
+Build a spustenie:
+```bash
+docker build -t paybysquare-api .
+docker run -p 3000:3000 paybysquare-api
+```
+
+### Render / Railway / Heroku
+
+Aplikácia je pripravená na deployment na platformy ako Render, Railway alebo Heroku. Stačí nastaviť:
+- Build command: `npm install`
+- Start command: `npm start`
+
+## Použitie ako Node.js modul
+
+Môžeš použiť `payBySquareGenerator.js` aj priamo v inom projekte:
+
+```javascript
+const { 
+  generatePayBySquareCode, 
+  generatePayBySquareQR 
+} = require('./payBySquareGenerator');
+
+// Vygeneruj len kód
+const code = await generatePayBySquareCode({
+  amount: 100,
+  iban: 'SK7700000000000000000000',
+  beneficiaryName: 'Test User'
+});
+
+// Vygeneruj QR kód s rámčekom
+const qrBuffer = await generatePayBySquareQR({
+  amount: 100,
+  iban: 'SK7700000000000000000000',
+  beneficiaryName: 'Test User'
+}, {
+  withFrame: true,
+  qrSize: 300
+});
+
+// Ulož do súboru
+const fs = require('fs');
+fs.writeFileSync('payment-qr.png', qrBuffer);
+```
+
+## API funkcie modulu
+
+### `generatePayBySquareCode(paymentData)`
+Vygeneruje PayBySquare kód (text string).
+
+### `generateQRCodeImage(code, options)`
+Vygeneruje QR kód obrázok z PayBySquare kódu.
+
+### `addPayBySquareFrame(qrBuffer, framePath)`
+Pridá rámček okolo QR kódu.
+
+### `generatePayBySquareQR(paymentData, options)`
+Kompletná funkcia - vygeneruje PayBySquare kód a vytvorí QR obrázok s rámčekom.
+
+```javascript
+// Fetch API
+const response = await fetch('http://localhost:3000/pay-by-square/generate-qr', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        amount: 100.50,
+        iban: 'SK7700000000000000000000',
+        beneficiaryName: 'Obchod XYZ',
+        variableSymbol: '2025001'
+    })
+});
+
+const blob = await response.blob();
+const imageUrl = URL.createObjectURL(blob);
+
+// Zobrazenie v HTML
+document.getElementById('qr-image').src = imageUrl;
+```
+
+## Poznámky
+
+- Aplikácia používa LZMA kompresiu pre generovanie PayBySquare kódov
+- QR kódy sú generované s error correction level M
+- Default veľkosť QR kódu je 300x300 px (pred vložením do rámčeka)
+- Súbor `frame.png` musí byť umiestnený v kořenovom adresári projektu
+- QR kód sa automaticky vycentruje a škáluje na 70% veľkosti rámčeka
+- Ak `frame.png` neexistuje a `withFrame=true`, vráti sa QR kód bez rámčeka

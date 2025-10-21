@@ -1,0 +1,20 @@
+stages:
+  - build
+
+cache:
+  paths:
+    - node_modules
+
+build-job:
+  stage: build
+  script:
+    - |
+      docker run --rm -w /app -v $PWD:/app -u `id -u`:`id -g` node:20-slim sh -c "npm install && npm run build && npm pkg get version > version.txt"
+      
+      version=$(sed 's/["]//g' version.txt)
+      echo "package version $version"
+
+      docker build -t repo.astondev.sk/aston/pay-by-square-generator:$version .
+      docker push repo.astondev.sk/aston/pay-by-square-generator:$version
+  tags:
+    - build53
