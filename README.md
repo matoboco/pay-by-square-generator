@@ -174,10 +174,6 @@ Vygeneruje QR kód a vráti ho ako PNG obrázok (binárne dáta).
 
 **Povinné polia:**
 - `amount` - suma platby (číslo)
-- `iban` - IBAN účtu príjemcu
-
-**Povinné polia:**
-- `amount` - suma platby (číslo)
 - `iban` - IBAN účtu príjemcu (alebo použiť `bankAccounts` array)
 
 **Základné voliteľné polia:**
