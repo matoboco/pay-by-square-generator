@@ -107,15 +107,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-              example:
-                error: Missing required fields
-                message: amount and iban are mandatory
+              examples:
+                missing-amount:
+                  summary: Chýbajúca suma
+                  value:
+                    error: Missing required field: amount is mandatory
+                missing-account:
+                  summary: Chýbajúci účet
+                  value:
+                    error: Missing required field: either iban or bankAccounts array must be provided
         '500':
           description: Chyba pri generovaní QR kódu
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Failed to generate QR code
+                message: LZMA compression failed
 
   /pay-by-square-generator/generate-code:
     post:
@@ -150,12 +159,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                missing-amount:
+                  summary: Chýbajúca suma
+                  value:
+                    error: Missing required field: amount is mandatory
+                missing-account:
+                  summary: Chýbajúci účet
+                  value:
+                    error: Missing required field: either iban or bankAccounts array must be provided
         '500':
           description: Chyba pri generovaní kódu
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              example:
+                error: Failed to generate code
+                message: LZMA compression failed
 
   /pay-by-square-generator/version.txt:
     get:
@@ -179,6 +200,8 @@ components:
       type: object
       required:
         - amount
+      description: |
+        Platobná požiadavka. Okrem `amount` musí byť zadané buď `iban` alebo `bankAccounts` pole.
       properties:
         # Základné platobné údaje
         amount:
@@ -460,9 +483,9 @@ components:
       properties:
         error:
           type: string
-          description: Typ chyby
-          example: Missing required fields
+          description: Popis chyby
+          example: Missing required field: amount is mandatory
         message:
           type: string
-          description: Detailný popis chyby
-          example: amount and iban are mandatory
+          description: Detailná technická správa o chybe (len pri 500 chybách)
+          example: Cannot read property 'iban' of undefined
