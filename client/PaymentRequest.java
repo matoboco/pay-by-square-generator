@@ -1,5 +1,6 @@
 package sk.wuestenrot.paybysquare.client;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -17,9 +18,9 @@ public class PaymentRequest {
     // Identifikácia
     private String invoiceId;
 
-    // Dátumy (format YYYY-MM-DD)
-    private String date;
-    private String paymentDueDate;
+    // Dátumy
+    private LocalDate date;
+    private LocalDate paymentDueDate;
 
     // Platobné symboly
     private String variableSymbol;
@@ -100,19 +101,19 @@ public class PaymentRequest {
         this.invoiceId = invoiceId;
     }
 
-    public String getDate() {
+    public LocalDate getDate() {
         return date;
     }
 
-    public void setDate(String date) {
+    public void setDate(LocalDate date) {
         this.date = date;
     }
 
-    public String getPaymentDueDate() {
+    public LocalDate getPaymentDueDate() {
         return paymentDueDate;
     }
 
-    public void setPaymentDueDate(String paymentDueDate) {
+    public void setPaymentDueDate(LocalDate paymentDueDate) {
         this.paymentDueDate = paymentDueDate;
     }
 
@@ -290,7 +291,7 @@ public class PaymentRequest {
         private Integer day;
         private List<Integer> month;
         private String periodicity; // d, w, b, m, B, q, s, a
-        private String lastDate; // format YYYY-MM-DD
+        private LocalDate lastDate;
 
         public StandingOrder() {
         }
@@ -319,11 +320,11 @@ public class PaymentRequest {
             this.periodicity = periodicity;
         }
 
-        public String getLastDate() {
+        public LocalDate getLastDate() {
             return lastDate;
         }
 
-        public void setLastDate(String lastDate) {
+        public void setLastDate(LocalDate lastDate) {
             this.lastDate = lastDate;
         }
 
@@ -351,7 +352,7 @@ public class PaymentRequest {
         private String creditorId;
         private String contractId;
         private Double maxAmount;
-        private String validTillDate; // format YYYY-MM-DD
+        private LocalDate validTillDate;
 
         public DirectDebit() {
         }
@@ -428,11 +429,11 @@ public class PaymentRequest {
             this.maxAmount = maxAmount;
         }
 
-        public String getValidTillDate() {
+        public LocalDate getValidTillDate() {
             return validTillDate;
         }
 
-        public void setValidTillDate(String validTillDate) {
+        public void setValidTillDate(LocalDate validTillDate) {
             this.validTillDate = validTillDate;
         }
 
