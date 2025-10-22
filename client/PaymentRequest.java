@@ -1,35 +1,20 @@
 package sk.wuestenrot.paybysquare.client;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.constraints.*;
 import java.util.List;
 
 /**
  * PayBySquare platobná požiadavka.
  * Obsahuje všetky údaje potrebné pre generovanie PayBySquare QR kódu.
  */
-@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PaymentRequest {
 
     // Základné platobné údaje
-    @NotNull(message = "Amount is mandatory")
-    @DecimalMin(value = "0.01", message = "Amount must be at least 0.01")
     private Double amount;
-
-    @Pattern(regexp = "^[A-Z]{3}$", message = "Currency must be a valid ISO 4217 code")
     private String currency = "EUR";
-
-    @Pattern(regexp = "^[A-Z]{2}[0-9]{2}[A-Z0-9]+$", message = "Invalid IBAN format")
-    @Size(max = 34, message = "IBAN must not exceed 34 characters")
     private String iban;
-
-    @Pattern(regexp = "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$", message = "Invalid SWIFT/BIC format")
-    @Size(max = 11, message = "SWIFT must not exceed 11 characters")
     private String swift;
 
     // Identifikácia
-    @Size(max = 10, message = "Invoice ID must not exceed 10 characters")
     private String invoiceId;
 
     // Dátumy (format YYYY-MM-DD)
@@ -37,39 +22,21 @@ public class PaymentRequest {
     private String paymentDueDate;
 
     // Platobné symboly
-    @Pattern(regexp = "^[0-9]*$", message = "Variable symbol must contain only digits")
-    @Size(max = 10, message = "Variable symbol must not exceed 10 characters")
     private String variableSymbol;
-
-    @Pattern(regexp = "^[0-9]*$", message = "Constant symbol must contain only digits")
-    @Size(max = 4, message = "Constant symbol must not exceed 4 characters")
     private String constantSymbol;
-
-    @Pattern(regexp = "^[0-9]*$", message = "Specific symbol must contain only digits")
-    @Size(max = 10, message = "Specific symbol must not exceed 10 characters")
     private String specificSymbol;
-
-    @Size(max = 35, message = "Originators reference must not exceed 35 characters")
     private String originatorsReferenceInformation;
-
-    @Size(max = 140, message = "Note must not exceed 140 characters")
     private String note;
 
     // Údaje o príjemcovi
-    @Size(max = 70, message = "Beneficiary name must not exceed 70 characters")
     private String beneficiaryName;
-
-    @Size(max = 70, message = "Beneficiary address 1 must not exceed 70 characters")
     private String beneficiaryAddress1;
-
-    @Size(max = 70, message = "Beneficiary address 2 must not exceed 70 characters")
     private String beneficiaryAddress2;
 
     // Typy platby
     private List<String> paymentOptions;
 
     // Viacero bankových účtov
-    @Size(max = 6, message = "Maximum 6 bank accounts allowed")
     private List<BankAccount> bankAccounts;
 
     // Trvalý príkaz
@@ -80,9 +47,6 @@ public class PaymentRequest {
 
     // QR nastavenia
     private Boolean withFrame = true;
-
-    @Min(value = 100, message = "QR size must be at least 100")
-    @Max(value = 1000, message = "QR size must not exceed 1000")
     private Integer qrSize = 300;
 
     // Konstruktory
@@ -278,15 +242,8 @@ public class PaymentRequest {
     /**
      * Bankový účet príjemcu.
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class BankAccount {
-        @NotNull(message = "IBAN is mandatory")
-        @Pattern(regexp = "^[A-Z]{2}[0-9]{2}[A-Z0-9]+$", message = "Invalid IBAN format")
-        @Size(max = 34, message = "IBAN must not exceed 34 characters")
         private String iban;
-
-        @Pattern(regexp = "^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$", message = "Invalid SWIFT/BIC format")
-        @Size(max = 11, message = "SWIFT must not exceed 11 characters")
         private String swift;
 
         public BankAccount() {
@@ -329,16 +286,10 @@ public class PaymentRequest {
     /**
      * Nastavenia pre trvalý príkaz.
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class StandingOrder {
-        @Min(value = 1, message = "Day must be at least 1")
-        @Max(value = 31, message = "Day must not exceed 31")
         private Integer day;
-
-        private List<@Min(1) @Max(12) Integer> month;
-
+        private List<Integer> month;
         private String periodicity; // d, w, b, m, B, q, s, a
-
         private String lastDate; // format YYYY-MM-DD
 
         public StandingOrder() {
@@ -390,35 +341,16 @@ public class PaymentRequest {
     /**
      * Nastavenia pre inkaso (SEPA direct debit).
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     public static class DirectDebit {
         private String scheme = "other"; // sepa, other
-
         private String type; // oneoff, one-off, recurrent
-
-        @Pattern(regexp = "^[0-9]*$", message = "Variable symbol must contain only digits")
-        @Size(max = 10, message = "Variable symbol must not exceed 10 characters")
         private String variableSymbol;
-
-        @Pattern(regexp = "^[0-9]*$", message = "Specific symbol must contain only digits")
-        @Size(max = 10, message = "Specific symbol must not exceed 10 characters")
         private String specificSymbol;
-
-        @Size(max = 35, message = "Originators reference must not exceed 35 characters")
         private String originatorsReferenceInformation;
-
-        @Size(max = 35, message = "Mandate ID must not exceed 35 characters")
         private String mandateId;
-
-        @Size(max = 35, message = "Creditor ID must not exceed 35 characters")
         private String creditorId;
-
-        @Size(max = 35, message = "Contract ID must not exceed 35 characters")
         private String contractId;
-
-        @DecimalMin(value = "0.01", message = "Max amount must be at least 0.01")
         private Double maxAmount;
-
         private String validTillDate; // format YYYY-MM-DD
 
         public DirectDebit() {
