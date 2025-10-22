@@ -174,6 +174,10 @@ Vygeneruje QR kód a vráti ho ako PNG obrázok (binárne dáta).
 
 **Povinné polia:**
 - `amount` - suma platby (číslo)
+- `iban` - IBAN účtu príjemcu
+
+**Povinné polia:**
+- `amount` - suma platby (číslo)
 - `iban` - IBAN účtu príjemcu (alebo použiť `bankAccounts` array)
 
 **Základné voliteľné polia:**
@@ -320,6 +324,79 @@ docker build -t paybysquare-api .
 docker run -p 3000:3000 paybysquare-api
 ```
 
+**Kubernetes (Aston):**
+
+Vytvor súbor `k8s-deployment.yaml`:
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: pay-by-square-generator
+  labels:
+    app: pay-by-square-generator
+spec:
+  selector:
+    app: pay-by-square-generator
+  ports:
+    - port: 3000
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pay-by-square-generator
+spec:
+  selector:
+    matchLabels:
+      app: pay-by-square-generator
+  revisionHistoryLimit: 1
+  template:
+    metadata:
+      labels:
+        app: pay-by-square-generator
+    spec:
+      containers:
+        - name: pay-by-square-generator
+          image: astonwus.azurecr.io/pay-by-square-generator
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+      imagePullSecrets:
+        - name: astonwus
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pay-by-square-generator
+spec:
+  rules:
+    - http:
+        paths:
+          - path: /pay-by-square-generator
+            pathType: Prefix
+            backend:
+              service:
+                name: pay-by-square-generator
+                port:
+                  number: 3000
+```
+
+Deploy do Kubernetes:
+```bash
+# Build & push do Azure Container Registry
+docker build -t astonwus.azurecr.io/pay-by-square-generator:latest .
+az acr login --name astonwus
+docker push astonwus.azurecr.io/pay-by-square-generator:latest
+
+# Deploy
+kubectl apply -f k8s-deployment.yaml
+
+# Skontroluj status
+kubectl get pods -l app=pay-by-square-generator
+kubectl get svc pay-by-square-generator
+kubectl get ingress pay-by-square-generator
+```
+
 **Poznámka:** Alpine image je menší, ale vyžaduje nativné balíčky. Ak chceš ešte menší image, môžeš použiť multi-stage build.
 
 ### Render / Railway / Heroku
@@ -411,16 +488,16 @@ Kompletná funkcia - vygeneruje PayBySquare kód a vytvorí QR obrázok s rámč
 ```javascript
 // Fetch API
 const response = await fetch('http://localhost:3000/pay-by-square/generate-qr', {
-    method: 'POST',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-        amount: 100.50,
-        iban: 'SK7700000000000000000000',
-        beneficiaryName: 'Obchod XYZ',
-        variableSymbol: '2025001'
-    })
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    amount: 100.50,
+    iban: 'SK7700000000000000000000',
+    beneficiaryName: 'Obchod XYZ',
+    variableSymbol: '2025001'
+  })
 });
 
 const blob = await response.blob();

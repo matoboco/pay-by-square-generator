@@ -17,6 +17,8 @@ servers:
     description: Development server
   - url: https://wusonline.astondev.sk
     description: Wusweb - Astondev
+  - url: https://portal.steady.wuestenrot.sk
+    description: Wusweb - Steady
 
 tags:
   - name: QR Generation
